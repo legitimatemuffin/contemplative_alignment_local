@@ -294,23 +294,35 @@ class SafetyScorer:
         for sample in samples:
             prompt_text = sample["prompt_text"]
             hazard = sample["hazard"]
-            
+
+            # Support both nested ("models") and flat ("techniques") formats
+            model_data = None
+            if "models" in sample:
+                # assume only one model per sample for now
+                model_data = list(sample["models"].values())[0]
+            elif "techniques" in sample:
+                model_data = sample["techniques"]
+            else:
+                continue
+
             for technique in techniques:
-                response = sample["techniques"][technique]["response"]
-                
-                # Skip responses with errors
-                if response.startswith("ERROR:"):
+                technique_entry = model_data.get(technique, {})
+                if not technique_entry:
                     continue
-                
+
+                response = technique_entry.get("response", "")
+                if not response or response.startswith("ERROR:"):
+                    continue
+
                 # Evaluate safety
                 evaluation = self.evaluate_response(prompt_text, response, hazard)
                 safety_score = evaluation["safety_score"]
-                
+
                 # Store scores
                 safety_scores[technique].append(safety_score)
-                
                 if hazard in hazard_scores:
                     hazard_scores[hazard][technique].append(safety_score)
+
         
         # Calculate average scores
         avg_scores = {

@@ -10,6 +10,8 @@ from collections import Counter
 from safety_evaluator import SafetyScorer
 
 
+
+
 class AILuminateAnalyzer:
     """
     Class to analyze and visualize results from the AILuminate benchmark tests.
@@ -29,6 +31,20 @@ class AILuminateAnalyzer:
         
         # Initialize the safety scorer
         self.safety_scorer = SafetyScorer()
+
+    def _get_technique_data(self, sample: Dict[str, Any], technique: str) -> Optional[Dict[str, Any]]:
+        """Safely extract technique data whether nested under 'models' or at top level."""
+        # Case 1: new JSON format (nested under 'models')
+        if "models" in sample:
+            for model_name, model_data in sample["models"].items():
+                if technique in model_data:
+                    return model_data[technique]
+        
+        # Case 2: legacy format (directly under 'techniques')
+        if "techniques" in sample:
+            return sample["techniques"].get(technique, {})
+        
+        return None
         
     def _load_results(self) -> Dict[str, Any]:
         """Load the results from the JSON file."""
@@ -49,7 +65,8 @@ class AILuminateAnalyzer:
             response_lengths = []
             
             for sample in self.samples:
-                technique_data = sample["techniques"].get(technique, {})
+                technique_data = self._get_technique_data(sample, technique)
+
                 
                 if technique_data:
                     response_times.append(technique_data.get("response_time", 0))
@@ -94,7 +111,8 @@ class AILuminateAnalyzer:
             hazard = sample["hazard"]
             
             for technique in self.techniques:
-                technique_data = sample["techniques"].get(technique, {})
+                technique_data = self._get_technique_data(sample, technique)
+
                 
                 if technique_data:
                     data.append({
@@ -155,7 +173,8 @@ class AILuminateAnalyzer:
         data = []
         for sample in self.samples:
             for technique in self.techniques:
-                technique_data = sample["techniques"].get(technique, {})
+                technique_data = self._get_technique_data(sample, technique)
+
                 
                 if technique_data:
                     data.append({
@@ -188,7 +207,8 @@ class AILuminateAnalyzer:
         data = []
         for sample in self.samples:
             for technique in self.techniques:
-                technique_data = sample["techniques"].get(technique, {})
+                technique_data = self._get_technique_data(sample, technique)
+
                 
                 if technique_data:
                     data.append({
@@ -346,18 +366,19 @@ class AILuminateAnalyzer:
         <head>
             <title>AILuminate Benchmark: Sample-by-Sample Report</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                h1, h2, h3 { color: #333; }
-                .sample { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-                .prompt { background-color: #f9f9f9; padding: 10px; border-left: 3px solid #2196F3; margin-bottom: 10px; }
-                .technique { border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; }
-                .response { background-color: #f5f5f5; padding: 10px; white-space: pre-wrap; margin-top: 5px; }
-                .metadata { color: #666; font-size: 0.9em; margin-top: 5px; }
-                .safety-score { font-weight: bold; padding: 3px 8px; border-radius: 3px; display: inline-block; }
-                .high { background-color: #c8e6c9; color: #2e7d32; }
-                .medium { background-color: #fff9c4; color: #f57f17; }
-                .low { background-color: #ffcdd2; color: #c62828; }
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                h1, h2, h3 {{ color: #333; }}
+                .sample {{ border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }}
+                .prompt {{ background-color: #f9f9f9; padding: 10px; border-left: 3px solid #2196F3; margin-bottom: 10px; }}
+                .technique {{ border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; }}
+                .response {{ background-color: #f5f5f5; padding: 10px; white-space: pre-wrap; margin-top: 5px; }}
+                .metadata {{ color: #666; font-size: 0.9em; margin-top: 5px; }}
+                .safety-score {{ font-weight: bold; padding: 3px 8px; border-radius: 3px; display: inline-block; }}
+                .high {{ background-color: #c8e6c9; color: #2e7d32; }}
+                .medium {{ background-color: #fff9c4; color: #f57f17; }}
+                .low {{ background-color: #ffcdd2; color: #c62828; }}
             </style>
+
         </head>
         <body>
             <h1>AILuminate Benchmark: Sample-by-Sample Report</h1>
@@ -369,7 +390,7 @@ class AILuminateAnalyzer:
             <h2>Samples</h2>
         """.format(
             timestamp=self.results["metadata"]["timestamp"],
-            model=self.results["metadata"]["model"],
+            model=", ".join(self.results["metadata"].get("models", [self.results["metadata"].get("model", "Unknown")])),
             techniques=", ".join(self.techniques),
             num_samples=len(self.samples)
         )
@@ -394,7 +415,8 @@ class AILuminateAnalyzer:
             )
             
             for technique in self.techniques:
-                technique_data = sample["techniques"].get(technique, {})
+                technique_data = self._get_technique_data(sample, technique)
+
                 
                 if technique_data:
                     response = technique_data.get("response", "")
@@ -481,16 +503,16 @@ class AILuminateAnalyzer:
         <head>
             <title>AILuminate Benchmark: Analysis Report</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                h1, h2, h3 { color: #333; }
-                table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; }
-                img { max-width: 100%; margin: 20px 0; border: 1px solid #ddd; }
-                .section { margin-bottom: 30px; }
-                .safety-high { background-color: #c8e6c9; }
-                .safety-medium { background-color: #fff9c4; }
-                .safety-low { background-color: #ffcdd2; }
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                h1, h2, h3 {{ color: #333; }}
+                table {{ border-collapse: collapse; width: 100%; margin-bottom: 20px; }}
+                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+                th {{ background-color: #f2f2f2; }}
+                img {{ max-width: 100%; margin: 20px 0; border: 1px solid #ddd; }}
+                .section {{ margin-bottom: 30px; }}
+                .safety-high {{ background-color: #c8e6c9; }}
+                .safety-medium {{ background-color: #fff9c4; }}
+                .safety-low {{ background-color: #ffcdd2; }}
             </style>
         </head>
         <body>
@@ -571,7 +593,7 @@ class AILuminateAnalyzer:
         </html>
         """.format(
             timestamp=self.results["metadata"]["timestamp"],
-            model=self.results["metadata"]["model"],
+            model=", ".join(self.results["metadata"].get("models", [self.results["metadata"].get("model", "Unknown")])),
             techniques=", ".join(self.techniques),
             num_samples=len(self.samples),
             summary_rows="".join([

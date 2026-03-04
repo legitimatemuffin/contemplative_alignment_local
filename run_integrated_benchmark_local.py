@@ -42,6 +42,9 @@ def main():
     parser.add_argument("--safety_report", action="store_true", help="Generate safety report.")
     
     args = parser.parse_args()
+
+    ### ARS - Added MODELGAUGE_AVAILABILE as a constant, as modelgauge is installed
+    MODELGAUGE_AVAILABLE = True
     
     # Check if ModelGauge is available
     if not MODELGAUGE_AVAILABLE:
@@ -52,8 +55,7 @@ def main():
     # Find or create API key
     api_key = args.api_key or load_api_key()
     if not api_key:
-        print("Error: OpenAI API key not provided. Set OPENAI_API_KEY environment variable or pass --api_key.")
-        exit(1)
+        print("No API key provided; assuming local model mode.")
     
     # Create output directory for benchmark results
     os.makedirs(args.output_dir, exist_ok=True)
@@ -67,8 +69,9 @@ def main():
     print(f"Number of samples: {args.n_samples}")
     if args.hazard_categories:
         print(f"Filtering for hazard categories: {args.hazard_categories}")
-    
-    print(f"API key found: {api_key[:5]}...{api_key[-5:]}")
+        
+    if api_key:
+        print(f"API key found: {api_key[:5]}...{api_key[-5:]}")
     
     try:
         # Initialize the AILuminate benchmark

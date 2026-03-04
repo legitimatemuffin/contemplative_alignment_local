@@ -75,10 +75,19 @@ if MODELGAUGE_AVAILABLE:
             
             # Initialize OpenAI client
             try:
-                if api_key:
-                    self.client = openai.OpenAI(api_key=api_key)
+                from local_model_backend import LocalModelBackend
+
+                # Detect whether we're in local mode
+                self.is_local = (api_key is None or api_key.lower() == "local")
+
+                if self.is_local:
+                    print(f"[{self.__class__.__name__}] Using local model backend")
+                    self.local_model = LocalModelBackend(model_id="mistralai/Mistral-7B-Instruct-v0.3")
+                    self.client = None
                 else:
-                    self.client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+                    self.client = openai.OpenAI(api_key=api_key or os.environ.get("OPENAI_API_KEY"))
+                    self.local_model = None
+
             except Exception as e:
                 print(f"Error initializing OpenAI client: {str(e)}")
                 self.client = None
@@ -94,20 +103,20 @@ if MODELGAUGE_AVAILABLE:
 
         def evaluate(self, request: OpenAIRequest) -> OpenAIResponse:
             try:
-                # Apply the standard prompting technique
-                if self.client:
+                if self.is_local and self.local_model:
+                    response_text, _, _ = self.local_model.generate(request.text)
+                elif self.client:
                     response_text, _, _ = self.technique.apply(
                         prompt=request.text,
                         model="gpt-4",
                         api_key=self.client.api_key
                     )
                 else:
-                    response_text = "ERROR: OpenAI client not initialized"
+                    response_text = "ERROR: No model backend initialized"
                 return OpenAIResponse(text=response_text)
             except Exception as e:
-                # Return error message if there's an exception
-                error_msg = f"ERROR: {str(e)}"
-                return OpenAIResponse(text=error_msg)
+                return OpenAIResponse(text=f"ERROR: {str(e)}")
+
 
         def translate_response(self, request: OpenAIRequest, response: OpenAIResponse) -> SUTResponse:
             return SUTResponse(text=response.text)
@@ -130,10 +139,19 @@ if MODELGAUGE_AVAILABLE:
             
             # Initialize OpenAI client
             try:
-                if api_key:
-                    self.client = openai.OpenAI(api_key=api_key)
+                from local_model_backend import LocalModelBackend
+
+                # Detect whether we're in local mode
+                self.is_local = (api_key is None or api_key.lower() == "local")
+
+                if self.is_local:
+                    print(f"[{self.__class__.__name__}] Using local model backend")
+                    self.local_model = LocalModelBackend(model_id="mistralai/Mistral-7B-Instruct-v0.3")
+                    self.client = None
                 else:
-                    self.client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+                    self.client = openai.OpenAI(api_key=api_key or os.environ.get("OPENAI_API_KEY"))
+                    self.local_model = None
+
             except Exception as e:
                 print(f"Error initializing OpenAI client: {str(e)}")
                 self.client = None
@@ -149,20 +167,20 @@ if MODELGAUGE_AVAILABLE:
 
         def evaluate(self, request: OpenAIRequest) -> OpenAIResponse:
             try:
-                # Apply the prior relaxation prompting technique
-                if self.client:
+                if self.is_local and self.local_model:
+                    response_text, _, _ = self.local_model.generate(request.text)
+                elif self.client:
                     response_text, _, _ = self.technique.apply(
                         prompt=request.text,
                         model="gpt-4",
                         api_key=self.client.api_key
                     )
                 else:
-                    response_text = "ERROR: OpenAI client not initialized"
+                    response_text = "ERROR: No model backend initialized"
                 return OpenAIResponse(text=response_text)
             except Exception as e:
-                # Return error message if there's an exception
-                error_msg = f"ERROR: {str(e)}"
-                return OpenAIResponse(text=error_msg)
+                return OpenAIResponse(text=f"ERROR: {str(e)}")
+
 
         def translate_response(self, request: OpenAIRequest, response: OpenAIResponse) -> SUTResponse:
             return SUTResponse(text=response.text)
@@ -185,10 +203,19 @@ if MODELGAUGE_AVAILABLE:
             
             # Initialize OpenAI client
             try:
-                if api_key:
-                    self.client = openai.OpenAI(api_key=api_key)
+                from local_model_backend import LocalModelBackend
+
+                # Detect whether we're in local mode
+                self.is_local = (api_key is None or api_key.lower() == "local")
+
+                if self.is_local:
+                    print(f"[{self.__class__.__name__}] Using local model backend")
+                    self.local_model = LocalModelBackend(model_id="mistralai/Mistral-7B-Instruct-v0.3")
+                    self.client = None
                 else:
-                    self.client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+                    self.client = openai.OpenAI(api_key=api_key or os.environ.get("OPENAI_API_KEY"))
+                    self.local_model = None
+
             except Exception as e:
                 print(f"Error initializing OpenAI client: {str(e)}")
                 self.client = None
@@ -204,20 +231,20 @@ if MODELGAUGE_AVAILABLE:
 
         def evaluate(self, request: OpenAIRequest) -> OpenAIResponse:
             try:
-                # Apply the contemplative alignment prompting technique
-                if self.client:
+                if self.is_local and self.local_model:
+                    response_text, _, _ = self.local_model.generate(request.text)
+                elif self.client:
                     response_text, _, _ = self.technique.apply(
                         prompt=request.text,
                         model="gpt-4",
                         api_key=self.client.api_key
                     )
                 else:
-                    response_text = "ERROR: OpenAI client not initialized"
+                    response_text = "ERROR: No model backend initialized"
                 return OpenAIResponse(text=response_text)
             except Exception as e:
-                # Return error message if there's an exception
-                error_msg = f"ERROR: {str(e)}"
-                return OpenAIResponse(text=error_msg)
+                return OpenAIResponse(text=f"ERROR: {str(e)}")
+
 
         def translate_response(self, request: OpenAIRequest, response: OpenAIResponse) -> SUTResponse:
             return SUTResponse(text=response.text)
@@ -443,7 +470,7 @@ class IntegratedSafetyAnalyzer:
                 from modelgauge.sut import PromptResponseSUT
                 
                 # Create a simple test class for our benchmark
-                class SimpleTest(PromptResponseTest):
+                class LocalSimpleTest(PromptResponseTest):
                     def __init__(self, prompt_text, hazard_category=None):
                         """
                         Initialize a simple test for AILuminate benchmark.
@@ -519,7 +546,7 @@ class IntegratedSafetyAnalyzer:
                     
                     try:
                         # Create a simple test with hazard category
-                        test = SimpleTest(prompt_text, hazard_category)
+                        test = LocalSimpleTest(prompt_text, hazard_category)
                         
                         # Create a temporary directory for test data
                         import tempfile
@@ -751,7 +778,8 @@ class AILuminateBenchmark:
                 pass
         
         if not self.api_key:
-            raise ValueError("OpenAI API key not provided. Set OPENAI_API_KEY environment variable or provide api_key parameter.")
+            print("No API key provided – running in local model mode.")
+
         
         # Check if modelgauge is available
         self.modelgauge_available = False
@@ -864,7 +892,7 @@ class AILuminateBenchmark:
                 from modelgauge.sut import PromptResponseSUT
                 
                 # Create a simple test class for our benchmark
-                class SimpleTest(PromptResponseTest):
+                class LocalSimpleTest(PromptResponseTest):
                     def __init__(self, prompt_text, hazard_category=None):
                         """
                         Initialize a simple test for AILuminate benchmark.
@@ -940,7 +968,7 @@ class AILuminateBenchmark:
                     
                     try:
                         # Create a simple test with hazard category
-                        test = SimpleTest(prompt_text, hazard_category)
+                        test = LocalSimpleTest(prompt_text, hazard_category)
                         
                         # Create a temporary directory for test data
                         import tempfile
